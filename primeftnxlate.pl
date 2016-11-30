@@ -42,7 +42,12 @@
 # Multiple-line handling
 
 	$block = join('', @lines);
+
 	$block =~ s/PARAMETER(.*\n)((.....[X\+0-9].*\n|C.*\n)+)/PARAMETER \(\1\2     +\)\n/mg;
+
+#use re 'debugcolor';
+
+	$block =~ s/(^\s+(SUBROUTINE|FUNCTION).*\n)((#include.*\n|C.*\n)+)(\s+IMPLICIT.*\n)/$1\n$5\n$3/mg;
 
 # Write output
 

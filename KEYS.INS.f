@@ -3,7 +3,7 @@ C KEYS.INS.f  MNEMONIC KEYS FOR FILE SYSTEM (FTN)
 C Copyright (c) 1986, Prime Computer, Inc., Natick, MA 01760
 C
 C NOTE: THIS FILE SHOULD AGREE EXACTLY WITH KEYS.INS.PLP AND KEYS.INS.PMA
-C       THAT IS, BOTH THE INTEGER DECLARATIONS AND THE PARAMETER ( DECLARATIONS
+C       THAT IS, BOTH THE INTEGER DECLARATIONS AND THE PARAMETER DECLARATIONS
 C       SHOULD BE IN THE SAME ORDER AND INCLUDE THE SAME ITEMS.
 C
 C
@@ -42,7 +42,6 @@ C 04/02/86 M. Sadigh      Added K$RIAR for registered EPFS.
 C 02/06/86 Silveira       Added K$WIRE for wired class dynamic storage.
 C 01/30/86 Kao            Corrected K$REST from 2 to 1.
 C 12/26/85 M. Sadigh      Added K$SYS1 for dynamic allocation of DTAR1 segments.
-     +)
 
 C 12/20/85 M. Sadigh      Added K$REIT for registered EPFs.
 C 11/27/85 Moore          Changed K$NCNT to K$NCAM.

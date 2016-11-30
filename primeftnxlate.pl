@@ -43,11 +43,11 @@
 
 	$block = join('', @lines);
 
-	$block =~ s/PARAMETER(.*\n)((.....[X\+0-9].*\n|C.*\n)+)/PARAMETER \(\1\2     +\)\n/mg;
+	$block =~ s/^(\s+)PARAMETER(.*\n)((.....[X\+0-9].*\n|C.*\n)+)/\1PARAMETER \(\2\3     +\)\n/mg;
 
 #use re 'debugcolor';
 
-	$block =~ s/(^\s+(SUBROUTINE|\w FUNCTION).*\n)((.....\+.*\n)*)((#include.*\n|C.*\n)+)(\s+IMPLICIT.*\n)/$1\n$5\n$3/mg;
+	$block =~ s/(^\s+(SUBROUTINE|\w FUNCTION).*\n)((.....\+.*\n)*)((#include.*\n|C.*\n)+)(\s+IMPLICIT.*\n)/$1$3$7$5/mg;
 
 # Write output
 

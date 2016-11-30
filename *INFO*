@@ -1,0 +1,32 @@
+Chimaera  is  an  unusual  adventure,  written  by  one  of GGR users.
+Consequently, the coding standards are not always what they should be.
+This said, it also appears quite robust and is sufficiently  different
+from the main-stream adventures to be of considerable interest.
+
+The  game  is  supplied as a .run file and is built as such by the CPL
+builder.  However, for the benefit of  those  who  are  stuck  with  a
+pre-rev.19.4  Primos,  the CHIMAERA.OLD.BUILD.cpl builder is provided,
+which will produce a V-mode .save runfile.  It should be  possible  to
+run  CHIMAERA  in  R-mode,  but you would have to re-write GGRSUB.pma,
+strip off SUBROUTINE MAIN from the main module, replace  RETURNs  from
+theat module with CALL EXITs and remember to DBASE when loading it.
+
+I  apologise  for  the  state of the GGRSUB source files. The game was
+never converted to the up-to-date GGR libraries, so you  get  all  the
+bad old junk.
+
+Please  note  that  the  random number generation is deliberately done
+internally within the program, instead of via library routines.   This
+is  due  to the time it takes to initialise the standard random number
+generator at rev.20.2 (two seconds!!).  CHIMAERA initialises a lot, so
+it got really slugged down as the result.  (Before you ask, yes, there
+ARE good reasons for it initialising a lot!).
+
+                                         Mike Arnautov       01 Feb 87
+                                         Glaxo Group Research
+                                         Computer Science
+                                         Greenford Rd.
+                                         Greenford
+                                         Middx. UB6 0HE
+                                         England
+

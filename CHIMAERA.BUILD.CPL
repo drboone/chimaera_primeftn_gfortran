@@ -1,0 +1,10 @@
+&args options:rest
+Close 1 2 3
+Binary CHIMAERA.bin
+Ftn CHIMAERA -64v %options%
+Ftn GGRSUB -dynm
+Pma GGRSUB -listing no
+Close 3
+Bind -load CHIMAERA -library
+Delete CHIMAERA.bin
+&return

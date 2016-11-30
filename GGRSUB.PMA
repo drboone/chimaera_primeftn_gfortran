@@ -1,0 +1,473 @@
+         ENT       COMP$R,CMPECB   (LENGTH,STRNG1,STRNG2)
+*        Taken from ICOMPN coding 14th September Wodehouse
+*
+*        Fixes
+*        01-Jul-82 Wodehouse           Allow 16 bit unsigned INTEGER*2
+*                                      for value of LENGTH
+*
+         SEG
+COMP$R   ARGT
+         LDA       LENGTH,*
+         BEQ       MATCH               Nothing to do so make it match
+         XCA                           LENGTH is 16 bit unsigned integer
+         TLFL      0
+         TLFL      1
+         EAFA      0,STRNG1,*          Set up addresses
+         EAFA      1,STRNG2,*
+         ZCM                           Compare the strings
+         BCEQ      MATCH               Strings match up to LENGTH
+         BCGT      STR1                String1 greater
+         LDA       MINONE              Set A to -1 (String2 greater)
+         PRTN
+MATCH    CRA                           Set A to zero
+         PRTN
+STR1     LDA       ONE                 Set A to 1 (String1 greater)
+         PRTN                          All done
+*        Static data
+MINONE   DEC       -1
+ONE      DEC       1
+*        Storage area (dynamic)
+         DYNM      LENGTH(3),STRNG1(3),STRNG2(3)
+*        Control area
+         LINK
+CMPECB   ECB       COMP$R,,LENGTH,3
+*
+         END
+*
+* JUSLEN.PMA,  GGRLIB,  WODEHOUSE, G.M.LACK,  07/01/83
+* Justify, find number of leading spaces and find length routines.
+* Copyright (c) 1983, Glaxo Group Research, Greenford, Middx
+*
+* Modifications
+* Date      Programmer   Modification
+* 25 Apr 86 G.M.Lack     Modified to handle 48-bit pointer offset into
+*                        second-character for buffer.  (F77 character string
+*                        handling).  Changed UII$VALUE name to VALUE$ as it
+*                        is *not* a UII fault but a microcode problem.
+* 28 Feb 84 G.M.Lack     Added UII$VALUE to overcome problem of UII package
+*                        on P2250 returning with 2 spaces in the A-register
+*                        after the ZMV instruction.
+* 14-Jul-83 G.M.Lack     Added check for empty, odd-lengthed buffer passed
+*                        to JUSTFY so that it set TRULEN to zero.  Had been
+*                        failing to set it (but function value was O.K.)
+* 13-Jul-83 G.M.Lack     Fixed bug relating to finding length of a 1 or 2
+*                        character long buffer which only contained spaces
+*                        and made routine run for BLEN = 0 to 65535.
+*
+*
+* JUSTFY  :  justify string and return true length
+*            Also, using (mostly) code of JUSTFY via alternate entry point
+* NLSP$R  :  find Number of Leading SPaces
+* LENGTH  :  find true length of string
+*
+* Calling sequences:
+*
+*     LEN = JUSTFY (string,  string_length [,true_length])
+*     CALL  JUSFTY (string,  string_length [,true_length])
+*
+*     LEN = LENGTH (string,  string_length)
+*
+*     NSP = NLSP$R (string,  string_length)
+*
+*
+*   GR0H contains a flag for the type of call
+*   GR1H contains the value of the starting character offset
+*   GR6H is set to the number of leading spaces
+*   GR2H is set to the real length
+*
+         ENT       JUSTFY,ECB1    (BUF,BLEN,TRULEN)  returns TRUE_LENGTH
+         ENT       NLSP$R,ECB2    (BUF,BLEN)         returns LEAD_SPACES
+         ENT       LENGTH,ECB3    (BUF,BLEN)         returns TRUE_LENGTH
+         SEGR
+         LINK
+ECB1     ECB       JUSTFY,,BUF,3
+ECB2     ECB       NLSP$R,,BUF,2
+ECB3     ECB       LENGTH,,BUF,2
+         PROC
+*
+NLSP$R   ARGT
+         LH        0,=-1          Set flag in GR0H to -1
+         JMP       FLAG_SET
+*
+LENGTH   ARGT
+         LH        0,=1           Set flag in GR0H to 1
+         JMP       FLAG_SET
+*
+JUSTFY   ARGT
+         CRHL      0              Set flag in GR0H to 0
+FLAG_SET EQU       *
+*
+         LH        2,BLEN,*
+         BHEQ      2,OUT          If nothing to do, jump to exit
+         LH        6,2            Make copy for use
+*   Check whether user sent us a 1 char offset
+         CRHL      1
+         LH        3,BUF
+         BRBR      3,4,EXT_CHKD
+         LH        1,BUF+2
+         LHLT      1
+*   Check for offset at start.  If there, we must allow for it in search length
+         AH        6,1
+         BHEQ      6,FULL         Allow for 65535 + 1 offset (sigh!)
+EXT_CHKD EQU       *              GR1H now = 1 if 1 char offset, 0 if not
+         IH1       6
+         SHR1      6              Change to no. of words
+         BHNE      6,NORMAL       Check for 65535 characters
+FULL     SSM       6              Set GR6H = :100000
+NORMAL   LH        5,6            Save for last char search
+         BHGT      0,LENGTH_PART  Check for LENGTH call
+*
+*   Count the number of leading spaces.  NLSP$R and JUSTFY use this.
+*
+         EAXB      BUF,*6         End of search buffer
+         TCH       6              -ve index, increase to zero
+         LH        4,XB%,6        Get first word
+         BHEQ      1,LEAD_CHECK   If no offset use as is
+         CRBL      4
+         OH        4,='120000     else force space in
+         JMP       LEAD_CHECK
+*
+NEXT_LEAD ;
+         LH        4,XB%,6
+LEAD_CHECK ;
+         XH        4,=C'  '       Is it 2 spaces?
+         BHNE      4,FOUND_FIRST_CHAR
+         BHI1      6,NEXT_LEAD
+*
+*    If we drop past here the buffer is empty
+*
+OUT      BHNE      0,EXIT         NLSP$R has BLEN in A-reg, so finish
+         CRHL      2              Set function value for JUSTFY
+         LH        1,TRULEN       Check whether 3rd arg present
+         BHLT      1,EXIT         Skip next instruction if not
+         ZMH       TRULEN,*
+EXIT     PRTN
+*
+FOUND_FIRST_CHAR ;
+         CRBR      4              Which character in word?
+         LHEQ      4              4H = 0 if L/h byte, 1 if R/h byte
+         AH        6,5            Checked words
+         SHL1      6              Checked characters
+         AH        6,4            Add character in last word checked
+         SH        6,1            Allow for any initial offset
+*   Must check that answer <= check length.  If not we have found a non-space
+*   character in the R/H byte of the last word when we didn't want to check it.
+         CH        6,2
+         BCGE      OUT            All spaces, so jump to set A-reg and TRULEN
+         BHGE      0,LENGTH_PART  Check flag
+         LH        2,6            Only NLSP$R comes here
+         PRTN                     So return with answer in A-reg
+*
+*   Must now take special action if BLEN was odd to avoid BLEN + 1 character
+*
+LENGTH_PART ;
+         EAXB      BUF,*
+         LH        4,XB%-1,5      Get last word
+*    Last word = odd character check
+         LH        3,2            Search length
+         NH        3,=1
+         XH        3,1            AND with start offset
+         BHEQ      3,TAIL_CHECK   If zero, check both chars
+         CRBR      4              CLear R/H byte
+         OH        4,='240        Replace with space
+         JMP       TAIL_CHECK     Now rejoin normal test
+*
+NEXT_TAIL ;                       Find last non-space character
+         LH        4,XB%-1,5
+TAIL_CHECK ;
+         XH        4,=C'  '       XOR word with 2 spaces
+         BHNE      4,FOUND_LAST_CHAR   Check result
+         BHD1      5,NEXT_TAIL    Continue loop?
+*    Blank strings pass here (only for LENGTH, JUSTFY would drop out at EXIT)
+         CRHL      2              Return answer of zero
+         PRTN
+*
+FOUND_LAST_CHAR ;
+         CRBL      4              Which character in word?
+         LHEQ      4              4H = 1 if L/h byte, 0 if R/h byte non-space
+         LHL1      2,5            Chars unchecked (includes current word)
+         SH        2,4            Subtract spaces in current word
+         SH        2,1            Subtract leading offset
+         BHEQ      0,JUSTFY_PART  Check flag in GR0H
+         PRTN
+*
+JUSTFY_PART ;
+         SH        2,6            TRULEN = LENGTH - LEADING_SPACES
+         LH        1,TRULEN       Check for 3 args present
+         BRLT      1,MOVE_STRING  Skip next instruction if not
+         STH       2,TRULEN,*
+*
+*    Now move string
+*
+MOVE_STRING ;
+         BHEQ      6,NO_MOVE      If FIRST_CHAR_POS is zero, return
+         EAFA      1,BUF,*        FAR1 points to start of BUF
+         EAFA      0,BUF,*        BUF *CAN* have a character offset
+         ICHL      6              Unsigned 16-bit -> 32-bit
+         RLA       6,3            Change FIRST_CHAR_POS to bit offset
+         ARFA      0,6            FAR0 points to first non-space char
+*
+         LH        6,2            Make copy to preserve A-reg
+         ICHL      6              Unsigned 16-bit -> 32-bit
+         TRFL      0,6            FLR0 = true length of string
+         LH        7,BLEN,*
+         ICHL      7              Unsigned 16-bit -> 32-bit
+         TRFL      1,7            FLR1 = length of buffer
+*
+         STH       2,VALUE$       Remove when P2250 UII ZMV restores A-reg
+         ZMV                      Move characters and space fill to BLEN chars
+         LH        2,VALUE$       Restore function value
+NO_MOVE  PRTN
+*
+         DYNM      BUF(3),BLEN(3),TRULEN(3),VALUE$
+         END
+*
+         ENT       MOVE$R,EXIT (I1,LINE1,I2,LINE2,N)
+*  Modifications
+*  19 Aug 1980 Wodehouse Move ECB into procedure frame
+*                        and alter loop to move characters to remove
+*                        JMP statement
+*
+*  7 July 1981 Wodehouse Convert out of MVCH by use of ZMVD. Routine
+*                        for use as a special in RKIV_18.0.
+         SEG
+MOVE$R   ARGT
+         EAFA      0,LINE1,*
+         EAFA      1,LINE2,*
+         LDA       I1,*
+         SNZ
+         JMP       OUT
+         S1A
+         XCA
+         LLL       3
+         ALFA      0
+         LDA       I2,*
+         SNZ
+         JMP       OUT
+         S1A
+         XCA
+         LLL       3
+         ALFA      1
+         LDA       N,*
+         SNZ
+         JMP       OUT
+         XCA
+         TLFL      1
+         ZMVD
+OUT      PRTN
+         DYNM      I1(3),LINE1(3),I2(3),LINE2(3),N(3)
+         LINK
+EXIT     ECB       MOVE$R,,I1,5
+         END
+*
+         ENT       UPCASE,UPCECB   (LENGTH,STRING)
+*        New version using ZTRN 8th March 1982 Wodehouse.
+*
+         SEG
+UPCASE   ARGT
+         LDA       LENGTH,*
+         XCA                           LENGTH is 15 bit signed integer
+         TLFL      1
+         EAFA      0,STRING,*          Set up addresses
+         EAFA      1,STRING,*
+         EAXB      TRAN                Setup XB to point at TRAN
+         ZTRN                          Convert to upper case
+DONE     PRTN
+*        Static data
+TRAN     OCT    000001,001003,002005,003007,004011,005013,006015,007017
+         OCT    010021,011023,012025,013027,014031,015033,016035,017037
+         OCT    020041,021043,022045,023047,024051,025053,026055,027057
+         OCT    030061,031063,032065,033067,034071,035073,036075,037077
+         OCT    040101,041103,042105,043107,044111,045113,046115,047117
+         OCT    050121,051123,052125,053127,054131,055133,056135,057137
+         OCT    060141,061143,062145,063147,064151,065153,066155,067157
+         OCT    070161,071163,072165,073167,074171,075173,076175,077177
+         OCT    100201,101203,102205,103207,104211,105213,106215,107217
+         OCT    110221,111223,112225,113227,114231,115233,116235,117237
+         OCT    120241,121243,122245,123247,124251,125253,126255,127257
+         OCT    130261,131263,132265,133267,134271,135273,136275,137277
+         OCT    140301,141303,142305,143307,144311,145313,146315,147317
+         OCT    150321,151323,152325,153327,154331,155333,156335,157337
+         OCT    160301,141303,142305,143307,144311,145313,146315,147317
+         OCT    150321,151323,152325,153327,154331,155373,176375,177377
+*        Storage area (dynamic)
+         DYNM      STRING(3),LENGTH(3)
+*        Control area
+         LINK
+UPCECB   ECB       UPCASE,,STRING,2
+*
+         END
+*
+* FILL$$.V.PMA,  GGRLIB,  WODEHOUSE,  06/30/83
+* General word-filling routines
+* Copyright (c) 1983, Glaxo Group Research, Greenford, Middx
+*
+* Modifications
+* Date      Programmer  Description
+*
+* 24-Jun-83 G.M.Lack    Change ECBs so that LB% points to required
+*                       fill character.  Now only one entry point.
+* 21-Mar-83 Wodehouse   Remove FILL$ code as require special
+*                       hack to make word filling work.
+* 09-Mar-83 Wodehouse   Change fill code to use ZFIL to improve
+*                       speed (as new IMOVE uses ZMVD).
+*
+         SEG
+         ENT       ZFIL$R,ZECB    (LIST,NW)
+         ENT       OFFBTS,ZECB    (BTSCRN,LENGTH)
+         ENT       SZBTS,ZECB     (BTSCRN,LENGTH)
+         ENT       NFIL$R,NECB    (LIST,NW)
+         ENT       SFIL$R,SECB    (LIST,NW)
+         ENT       ONBTS,OECB     (BTSCRN,LENGTH)
+         ENT       SOBTS,OECB     (BTSCRN,LENGTH)
+*
+START    ARGT
+         LDA       NWORDS,*       Get length to fill
+         BEQ       OUT            Return if nothing to do
+         XCA                      16-bit unsigned -> 32-bit
+         LLL       1              -> no. of characters
+         TLFL      1              Set FLR 1
+         EAFA      1,LIST,*       Set FAR1 to start of buffer
+         LDA       LB%+'400       Get req'd filler into A-reg
+         ZFIL                     Execute function
+OUT      PRTN                     All done, so return
+*    Static data
+         LINK
+ZERO     OCT       000000
+NULL     OCT       000200
+SPACE    OCT       000240
+ONES     OCT       000377
+*    ECBs set LB% to point to required fill character
+ZECB     ECB       START,ZERO,LIST,2
+NECB     ECB       START,NULL,LIST,2
+SECB     ECB       START,SPACE,LIST,2
+OECB     ECB       START,ONES,LIST,2
+         PROC
+*
+*    Dynamic data
+         DYNM      LIST(3),NWORDS(3)
+*
+         END
+*
+* IMOVE.V.PMA,  GGRLIB,  WODEHOUSE,  06/30/83
+* Fast word-moving routine
+* Copyright (c) 1983, Glaxo Group Research, Greenford, Middx
+*
+* Modifications
+* Date      Programmer   Modification
+* 12-Jul-83 G.M.Lack     FILL$ code added here so that the case of moving
+*                        right by 1 word (i.e. buffer filling) uses ZMVD.
+* 08-Jul-83 G.M.Lack     Moving right 1 word within the same buffer
+*                        trapped since it gets lost with ZMVD.
+* 09-Mar-83 Wodehouse    Recoded to use ZMVD instruction for speed.
+*
+XREG     EQU       0
+         ENT       IMOVE,ZMVECB   (FROM,TO,WORDS)
+         ENT       FILL$,FILECB   (FILLER,BUFFER,WORDS)
+         SEG
+*
+IMOVE    ARGT
+         LDA       NW,*           Get word count to move
+         BEQ       OUT            If zero do nothing
+         STA       XREG           Save for later
+*   Now check for 1 word forward.  ZMVD wont move forward by < 32-bits
+*   Firstly, are source and destination in the same segment?
+         LDA       TO
+         SUB       FROM
+         ANA       SEG_MASK       Remove ring bits
+         BNE       NORMAL_MOVE    If different then ZMVD is Ok
+*   In same segment so check whether TO starts one word ahead of FROM
+         LDA       TO+1
+         SUB       FROM+1         Ignore wrap-around as ZMVD would
+         S1A                      do this anyway
+         BEQ       PROPAGATE
+*
+NORMAL_MOVE ;
+         LDA       XREG           Retrieve no. of words
+         XCA                      Stuff into BREG and clear AREG
+         LLL       1              Convert to # of characters for ZMVD
+         TLFL      1              Store it away
+         EAFA      0,FROM,*       Set up the addresses
+         EAFA      1,TO,*         (both of them)
+         ZMVD                     Do it man!
+OUT      PRTN                     All done
+*
+SEG_MASK OCT       7777
+*
+* FILL$.V.PMA,  GGRLIB,  WODEHOUSE,  06/30/83
+* General word filling routine
+* Copyright (c) 1983, Glaxo Group Research, Greenford, Middx
+*
+* Modifications:
+* Date      Programmer  Description
+* 12-Jul-83 G.M.Lack    Combined with IMOVE.V.PMA
+* 21-Jun-83 G.M.Lack    Altered to fill 1st 2 words before ZMVD
+*                       (seems to be necessary to get correct fill)
+* 21-Mar-83 Wodehouse   Code taken out of shared routines
+*                       and recoded to use ZMVD instruction
+*                       speed.
+*
+FILL$    ARGT
+         LDA       NW,*           Get word count to move
+         BEQ       OUT            If zero do nothing
+         TAX                      Move it away from A-reg
+PROPAGATE ;     Entry from IMOVE (NW already in X=reg)
+         LDA       FROM,*         Set A-reg to required filler
+         EALB      TO,*             & LB to start of buffer
+         STA       LB%+0          Fill first word
+         BDX       GT1            Continue if no. of words > 1
+         PRTN
+GT1      STA       LB%+1          Fill second word
+         BDX       GT2            Continue if no. of words > 2
+         PRTN
+*
+GT2      TXA                      Retrieve no. of words left to fill
+         XCA                      16-bit unsigned -> 32-bit
+         LLL       1              Change to no. of characters
+         TLFL      1              Set FLR1
+         EAFA      0,LB%+0        Set FAR0
+         EAFA      1,LB%+2        Set FAR1
+         ZMVD                     Release spring
+         PRTN                     Unwound, so return
+*
+         DYNM      FROM(3),TO(3),NW(3)
+*
+         LINK
+FILECB   ECB       FILL$,,FROM,3
+ZMVECB   ECB       IMOVE,,FROM,3
+*
+         END
+*
+     SUBR  RND,ECB
+*
+     SEG
+     RLIT
+*
+RND  ARGT
+     FLD   ARG1,*
+     LDA   '04
+     CAZ                      What does user want?
+     JMP   PLUS               Just initialize
+     LDA   RNDM               Generate next number
+     MPY   =8693
+     XCB
+     ADD   =6923
+     SSP
+     STA   RNDM               Save it for next time
+     FLTL
+     LDA   '06
+     SZE
+     SUB   =31                Divide by 2**31, so that it is in [0,1]
+     STA   '06
+     PRTN
+*
+PLUS STA   RNDM               Initialize
+     PRTN
+*
+     DYNM  ARG1(3)
+*
+     LINK
+RNDM BSS   1
+ECB  ECB   RND,,ARG1,1
+*
+     END

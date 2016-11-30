@@ -1,0 +1,493 @@
+C*    Logical function COMIN$. MLA Jan 1980.
+C*
+      LOGICAL FUNCTION COMIN$
+     +          (KEY,PROMPT,PROLEN,BUFFER,BUFLEN,TRULEN,ITEMS)
+C*
+$INSERT G$KEYS.INS.FTN
+C*
+      INTEGER*2 KEY,         /* A word of flags
+     +          PROMPT(1),   /* User prompt
+     +          PROLEN,      /* Prompt length in chars
+     +          BUFFER(1),   /* Recipient buffer
+     +          BUFLEN,      /* Its length in chars
+     +          TRULEN,      /* Returned true length of input
+     +          ITEMS,       /* Returned item count
+C*
+     +          COUNT,       /* The main character pointer
+     +          CHAR,        /* Used to hold a single char
+     +          ERASE,       /* User's erase character
+     +          KILL,        /* User's kill character
+     +          POINT,       /* Auxilary character pointer
+     +          TOKENS,      /* Internal item counter
+C*
+     +          CR,          /*            Carriage return (actually, LF)
+     +          COMMA,       /*            Comma
+     +          BLANK,       /*            Space
+     +          LOWERA,      /* Parameters Lower case a
+     +          LOWERZ,      /*            Lower case z
+     +          HAT,         /*            Up. arrow (logical escape)
+     +          QUOTE        /*            Quote mark
+C*
+      PARAMETER CR=:212,     COMMA=:254,     BLANK=:240,
+     +          LOWERA=:341, LOWERZ=:372,    HAT=:336,
+     +          QUOTE=:247
+C*
+      LOGICAL   UPPR,    /*           Force upper case
+     +          JUST,    /*           Left justify
+     +          PRNT,    /*           Ignore control chars (except er/kl)
+     +          NOEK,    /*           Ignore erase/kill
+     +          TTY,     /* Key flags Force TTY input
+     +          CANC,    /*           Echo 'Cancelled' on kill
+     +          BLCM,    /*           Replace commas with spaces
+     +          NESC,    /*           Switch off logical escape facility
+     +          QUOT,    /*           Switch on quote processing
+     +          PAD1,    /*           Pad to word boundary
+C*
+     +          LESC,    /*
+     +          STRING,  /* Utility flags
+     +          ITEM     /*
+C*
+      TRULEN=0
+      ITEMS=0
+      COMIN$=.FALSE.
+      IF (BUFLEN.LE.0) RETURN    /* Throw out daft buffer
+C*
+      UPPR=AND(KEY,G$UPPR).NE.0      /*
+      JUST=AND(KEY,G$JUST).NE.0      /*
+      NOEK=AND(KEY,G$NOEK).NE.0      /*
+      PRNT=AND(KEY,G$PRNT).NE.0      /*
+      TTY =AND(KEY,G$TTY ).NE.0      /* Decompose user supplied key
+      CANC=AND(KEY,G$CANC).NE.0      /*
+      BLCM=AND(KEY,G$BLCM).NE.0      /*
+      NESC=AND(KEY,G$NESC).NE.0      /*
+      QUOT=AND(KEY,G$QUOT).NE.0      /*
+      PAD1=AND(KEY,G$PAD1).NE.0      /*
+C*
+      IF (AND(KEY,G$PARS).EQ.0) GOTO 5    /* Parse only (no input)
+      COUNT=BUFLEN
+      GOTO 110
+C*
+5     LESC=.FALSE.      /*
+      STRING=.FALSE.    /* Initialise utility flags
+      ITEM=.FALSE.      /*
+C*
+      IF (.NOT.NOEK) CALL ERKL$$(1,ERASE,KILL,ICD)   /* Get user's erase/kill
+C*
+10    IF (PROLEN.GT.0) CALL TNOUA(PROMPT,PROLEN)     /* Ouput prompt, if any
+20    COUNT=0       /* Initialise character pointer
+C*
+30    IF (.NOT.TTY) CALL C1IN(CHAR)     /* Get next char,
+      IF (TTY)      CALL T1IN(CHAR)     /* possibly forcing TTY input
+C*
+      IF (NESC) GOTO 40            /* Look out for logical escape
+      IF (LESC) GOTO 80            /* If escape flag set, accept raw char
+      IF (CHAR.NE.HAT) GOTO 40     /* If current char is up. arrow,
+      LESC=.TRUE.                  /* set the escape flag
+      GOTO 30                      /* and go to get next character
+C*
+40    IF (NOEK) GOTO 60
+      IF (CHAR.NE.KILL) GOTO 50      /* Clear the line, if required
+      IF (CANC) CALL TNOU(' Cancelled',10)
+      GOTO 20
+C*
+50    IF (CHAR.NE.ERASE) GOTO 60
+      IF (COUNT.LE.0) GOTO 30      /* Ignore erase if nothing there
+      COUNT=COUNT-1                /* Step the pointer back
+      IF (.NOT.QUOT) GOTO 30       /* If quote processor on,
+      POINT=COUNT                  /* must check for erasing a quote
+      IF (GCHAR(LOC(BUFFER),POINT).EQ.QUOTE) STRING=.NOT.STRING
+      GOTO 30
+C*
+60    IF (CHAR.EQ.CR) GOTO 100                /* End of line
+      IF (COUNT.GE.BUFLEN) GOTO 90            /* Ignore supernumerary chars
+      IF (.NOT.QUOT) GOTO 70
+      IF (CHAR.EQ.QUOTE) STRING=.NOT.STRING   /* If quote mark, flip flag
+      IF (STRING) GOTO 80                     /* No adjustments within strings
+70    IF (PRNT.AND.CHAR.LT.BLANK) GOTO 30     /* Ignore control chars if PRNT
+      IF (BLCM.AND.CHAR.EQ.COMMA) CHAR=BLANK  /* If required, blank commas
+      IF (JUST.AND.COUNT.EQ.0.AND.CHAR.EQ.BLANK) GOTO 30   /* Justify
+      IF (UPPR.AND.CHAR.GE.LOWERA.AND.CHAR.LE.LOWERZ)
+     +          CHAR=AND(CHAR,:337)           /* Force upper case
+80    LESC=.FALSE.                            /* Unset escape flag
+      CALL SCHAR(LOC(BUFFER),COUNT,CHAR)      /* and store the character
+      GOTO 30
+90    COUNT=COUNT+1         /* If beyond end of buf, just up pointer
+      GOTO 30
+C*
+100   COMIN$=COUNT.LE.BUFLEN
+      IF (COUNT.EQ.0) GOTO 150            /* Have we got an empty line?
+      IF (.NOT.COMIN$) COUNT=BUFLEN       /* Can't point beyond end of buffer
+C*
+110   STRING=.FALSE.      /*
+      POINT=0             /* Prepare to rescan line counting items
+      TOKENS=0            /*
+C*
+115   ITEM=.FALSE.
+120   IF (POINT.EQ.COUNT) GOTO 140
+      CHAR=GCHAR(LOC(BUFFER),POINT)                   /* Get next char
+      IF (QUOT.AND.CHAR.EQ.QUOTE) STRING=.NOT.STRING  /* If ', flip flag
+      IF (ITEM.AND..NOT.STRING.AND.CHAR.EQ.BLANK) GOTO 130   /* End of token
+      TRULEN=POINT            /* It's a char - update TRULEN
+      IF (STRING) GOTO 120
+      IF (ITEM) GOTO 125        /* Have we got anything yet?
+      IF (CHAR.EQ.BLANK) GOTO 120
+      TOKENS=TOKENS+1           /* Possibly another token
+125   IF (CHAR.EQ.COMMA) GOTO 115
+      ITEM=.TRUE.               /* It is an item!
+      ITEMS=TOKENS
+      GOTO 120
+C*
+130   IF (POINT.EQ.COUNT) GOTO 140       /* Now skip trailing spaces
+      CHAR=GCHAR(LOC(BUFFER),POINT)
+      IF (CHAR.EQ.BLANK) GOTO 130        /* Yet another blank
+      IF (CHAR.EQ.COMMA.AND.BLCM) GOTO 130   /* Effectively also a blank
+      IF (CHAR.NE.COMMA) POINT=POINT-1   /* If new token must back one char
+      GOTO 115
+C*
+140   IF (TRULEN.GT.0) GOTO 160
+150   IF (AND(KEY,G$NDEF).NE.0) GOTO 10  /* Go reprompt if no default
+160   IF (COUNT.EQ.BUFLEN.AND..NOT.PAD1) RETURN        /* Is padding required?
+      IF (AND(KEY,G$NPAD+G$PARS).NE.0) RETURN
+      IF (RT(COUNT,1).NE.0) CALL SCHAR(LOC(BUFFER),COUNT,BLANK) /* Do odd space
+      IF (COUNT.EQ.BUFLEN.OR.PAD1) RETURN
+      CALL FILL$R(G$BLNK,BUFFER,COUNT+1,BUFLEN)        /* Pad the lot
+      RETURN
+      END
+C*
+C*********************************************************************
+C*
+C:    INTEGER FUNCTION NINDW(NUM,DW)     MLA Jun 79
+C**** Returns in DW day of week of the date N. Has the corresponding value 1 to 7.
+      INTEGER FUNCTION NINDW(NUM,DW)
+      INTEGER*4 DW,WK(7)
+      DATA WK/'Mon Tue Wed Thu Fri Sat Sun '/
+      N=NUM+2922
+      IF (N.GT.0.AND.N.LE.32142) GOTO 11
+      CALL TNOU('Date out of range. (NINDW)',26)
+      NINDW=0
+       DW='    '
+      RETURN
+11    NINDW=MOD(N+1,7)+1
+      DW=WK(NINDW)
+      RETURN
+      END
+C*
+C*********************************************************************
+C*
+C:    INTEGER FUNCTION NUFRD(DATE)     MLA Jun 79
+C* Date       Programmer    Modification
+C* 15 May 84  G.M.Lack      Added copying of UL array to allow sharing
+C**** Converts DATE (long or short format) into days since 00/01/77
+      INTEGER FUNCTION NUFRD(UDATE)
+      INTEGER DATE(8),N(12),DAT,MON,YR,D(2),UL(12),UDATE(8)
+      INTEGER*2 ULTMP(12)
+      REAL RMN(12)
+      EQUIVALENCE (D,RM)
+      DATA RMN/'JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC '/
+      DATA N/0,31,59,90,120,151,181,212,243,273,304,334/
+      DATA ULTMP/31,0,31,30,31,30,31,31,30,31,30,31/
+      CALL IMOVE(UDATE,DATE,8)
+      CALL IMOVE(ULTMP,UL,12)     /*  Copy of days-in-month template
+      IF (DATE(1).NE.0) GOTO 20
+      CALL TIMDAT(DATE,3)
+16    DAT=10*RS(DATE(2),8)+RT(DATE(2),8)-1936
+      MON=10*RS(DATE(1),8)+RT(DATE(1),8)-1936
+      YR =10*RS(DATE(3),8)+RT(DATE(3),8)-1936
+      GOTO 23
+20    IF (RS(DATE(2),8).EQ.:257) GOTO 22
+      IF (DATE(4).EQ.'  '.OR.RT(DATE(4),8).NE.:240) GOTO 16
+      DAT=10*RT(DATE(3),8)+RS(DATE(4),8)-1936
+      YR =10*RS(DATE(8),8)+RT(DATE(8),8)-1936
+      D(1)=AND(DATE(5),:157737)
+      D(2)=AND(DATE(6),:157777)
+      DO 21 MON=1,12
+21    IF (RMN(MON).EQ.RM) GOTO 23
+      GOTO 24
+22    DAT=10*RS(DATE(1),8)+RT(DATE(1),8)-1936
+      MON=10*RT(DATE(2),8)+RS(DATE(3),8)-1936
+      YR =10*RS(DATE(4),8)+RT(DATE(4),8)-1936
+23    UL(2)=28
+      IF (MOD(YR,4).EQ.0) UL(2)=29
+      IF (YR.GE.0.AND.YR.LT.65) YR=YR+100
+      IF (DAT.GT.0.AND.MON.GT.0.AND.MON.LT.13.AND.
+     +YR.GT.68.AND.YR.LT.157) GOTO 25
+24    CALL TNOU('Not a legal date. (NUFRD)',25)
+      NUFRD=-9999
+      RETURN
+25    IF (DAT.GT.UL(MON)) GOTO 24
+      NUFRD=N(MON)+DAT+365*(YR-69)
+      NUFRD=NUFRD+(NUFRD+305)/1460-2922
+      IF (DAT.GT.28.AND.MON.EQ.2) NUFRD=NUFRD-1
+30    RETURN
+      END
+C*
+C*********************************************************************
+C*
+C:    Logical function TOKEN$. MLA 15th Jan 1981.
+      LOGICAL FUNCTION TOKEN$
+     +          (KEY,BUFFER,BUFLEN,TOKEN,TOKLEN,POINT,TRULEN)
+C*
+$INSERT G$KEYS.INS.FTN
+C*
+      INTEGER*2 KEY,        /* A word of flags
+     +          BUFFER(1),  /* Buffer whose contents are to be parsed
+     +          BUFLEN,     /* Length of the bufferin chars
+     +          TOKEN(1),   /* Recipient token buffer
+     +          TOKLEN,     /* Length of the token buffer in chars
+     +          POINT,      /* Buffer character pointer
+     +          TRULEN,     /* Returns as token length
+C*
+     +          BLANK,      /*            Space
+     +          COMMA,      /*            Comma
+     +          QUOTE,      /* Parameters Quote mark
+     +          LOWERA,     /*            Lower case a
+     +          LOWERZ,     /*            Lower case z
+C*
+     +          COUNT,      /* Token char position
+     +          CHAR        /* Used to hold a single char
+C*
+      PARAMETER BLANK=:240,  COMMA=:254,  QUOTE=:247,
+     +          LOWERA=:341, LOWERZ=:372
+C*
+      LOGICAL BLCM,     /*           Treat commas as spaces
+     +        REM,      /* Key flags Deliver rest of BUFFER
+     +        QUOT,     /*           Switch on quote processing
+     +        UPPR,     /*           Force upper case
+     +        PAD1,     /*           Pad up to word boundary
+C*
+     +        ITEM,     /*
+     +        LASTQ,    /* Utility flags
+     +        STRING    /*
+C*
+      COUNT=0
+      TRULEN=0
+      TOKEN$=.FALSE.
+      IF (POINT.LT.0.OR.POINT.GE.BUFLEN) RETURN  /* Throw out silly start pos
+C*
+      ITEM=  .FALSE.              /*
+      LASTQ= .FALSE.              /* Initialise utility flags
+      STRING=.FALSE.              /*
+C*
+      REM =AND(KEY,G$REM ).NE.0  /*
+      BLCM=AND(KEY,G$BLCM).NE.0  /*
+      QUOT=AND(KEY,G$QUOT).NE.0  /* Decompose user supplied key
+      UPPR=AND(KEY,G$UPPR).NE.0  /*
+      PAD1=AND(KEY,G$PAD1).NE.0  /*
+C*
+10    IF (POINT.GE.BUFLEN) GOTO 70   /* Have we run out of buffer?
+      CHAR=GCHAR(LOC(BUFFER),POINT)  /* Get next char
+      IF (REM) GOTO 30              /* Just get rest of line
+      IF (STRING) GOTO 30            /* No delimeters within strings
+      IF (CHAR.EQ.COMMA.AND.BLCM) CHAR=BLANK     /* Pretend commas are blanks
+      IF (TRULEN.EQ.0.AND.CHAR.EQ.BLANK) GOTO 10 /* No token yet
+      IF (CHAR.NE.BLANK.AND.CHAR.NE.COMMA) GOTO 30   /* End of token?
+      GOTO 20
+C*
+15    IF (POINT.GE.BUFLEN) GOTO 70        /* Hunting for next token
+      CHAR=GCHAR(LOC(BUFFER),POINT)       /* Get another char
+      IF (CHAR.EQ.COMMA.AND.BLCM) CHAR=BLANK
+20    IF (CHAR.EQ.BLANK) GOTO 15          /* Nothing yet
+      IF (CHAR.NE.COMMA) GOTO 60          /* Got it!
+      IF (ITEM) GOTO 60                   /* Oops! Null token.
+      ITEM=.TRUE.
+      GOTO 15
+C*
+30    IF (.NOT.QUOT) GOTO 50         /* Is quote processing required
+      IF (CHAR.EQ.QUOTE) GOTO 40
+      LASTQ=.FALSE.      /* Not a quote, so unset 'last quote' flag
+      GOTO 50
+40    LASTQ=.NOT.LASTQ      /* A quote - flip both flags
+      STRING=.NOT.STRING    /*
+      IF (LASTQ) GOTO 10    /* If first quote, do not store it
+C*
+50    IF (COUNT.GE.TOKLEN) GOTO 55         /* Don't bother if no more space
+      IF (.NOT.STRING.AND.UPPR.AND.CHAR.GE.LOWERA.AND.CHAR.LE.LOWERZ)
+     +          CHAR=CHAR-:40
+      CALL SCHAR(LOC(TOKEN),COUNT,CHAR)              /* Store the char
+      GOTO 56
+55    COUNT=COUNT+1
+56    IF (CHAR.NE.BLANK.OR.STRING) TRULEN=COUNT      /* Update the true length
+      GOTO 10
+C*
+60    POINT=POINT-1             /* Step back to point to 1st char
+70    TOKEN$=TRULEN.LE.TOKLEN
+      IF (POINT.EQ.BUFLEN) POINT=0    /* Reset pointer if end of buffer
+      IF (COUNT.GT.TOKLEN) RETURN
+      IF (COUNT.EQ.TOKLEN.AND..NOT.PAD1) RETURN        /* Is padding required?
+      IF (AND(KEY,G$NPAD).NE.0) RETURN
+      IF (RT(COUNT,1).NE.0) CALL SCHAR(LOC(TOKEN),COUNT,BLANK)
+      IF (COUNT.EQ.TOKLEN.OR.PAD1) RETURN
+      CALL FILL$R(G$BLNK,TOKEN,COUNT+1,TOKLEN)
+      RETURN
+      END
+C*
+C*********************************************************************
+C*
+      SUBROUTINE TOVFIS(NUMBER,IWIDTH)
+C*    Terminal Output Variable Field Integer Short.
+      INTEGER*2 I,J,K,M,N(5)
+      LOGICAL MINUS
+      DATA N/1,10,100,1000,10000/
+      M=NUMBER
+      MINUS=M.LT.0
+      IF (MINUS) M=-M
+      IF (M.LT.0) M=0
+      I=2
+10    IF (M.LT.N(I)) GOTO 15
+      I=I+1
+      IF (I.LT.6) GOTO 10
+15    I=I-1
+      K=IWIDTH-I
+      IF (MINUS) K=K-1
+20    IF (K.LE.0) GOTO 25
+      K=K-1
+      CALL TNOUA(' ',1)
+      GOTO 20
+25    IF (MINUS) CALL TNOUA('-',1)
+30    K=:127400
+      J=N(I)
+35    IF (M.LT.0) GOTO 40
+      M=M-J
+      K=K+:400
+      GOTO 35
+40    M=M+J
+      CALL TNOUA(K,1)
+      I=I-1
+      IF (I.GT.0) GOTO 30
+      RETURN
+      END
+C*
+C*********************************************************************
+C*
+      SUBROUTINE PASSWD(MSSAGE,MSGLEN,PASS,LEN)
+C:    Modifications
+C*
+C* 10 Jan 90   G.M.Lack   Send CR with parity, for 8-bit protocols.
+C*                        Original code actually sent a null (zero)!
+C* 22 Jul 85   G.M.Lack   Change COMO file check to use CO$GET (unit
+C*                        independent)
+C:    10 Oct 1980 Wodehouse. Turn off any COMO file to prevent discovery
+C:                           of password. Use PRWF$$ to check if to turn
+C:                           it back on if required.
+$INSERT SYSCOM>KEYS.INS.FTN
+      INTEGER*2 PASS(1),DUPLX$,HALF,HDXNLF,MSSAGE(1),ICODE,NWR
+      INTEGER*2 COUSED,COUNIT
+      INTEGER*4 POS
+      LOGICAL HDX,ISCOMO
+      INTEGER*2 OCHARS(16,4)
+      PARAMETER LOOK=:177777,HALF=:100000,HDXNLF=:140000
+      DATA OCHARS / 16*'##' , 16*'MM' , 16*'SS' , 16*'**' /
+      IF (LEN.LE.0) RETURN
+      IF (LEN.GT.32) LEN=32
+      MODE=DUPLX$(LOOK)
+      HDX=(AND(MODE,HALF).NE.0)
+      IF (MSGLEN.LE.0) GOTO 50
+      CALL TNOUA(MSSAGE,MSGLEN)
+      CALL TNOU(':',1)
+50    CALL BREAK$(.TRUE.)
+      CALL CO$GET(COUNIT,COUSED)
+      ISCOMO = AND(COUSED,2) .NE. 0
+      IF (ISCOMO)                           /* If COMO file open
+     +CALL COMO$$(:000010,0,0,0,ICODE)      /* Turn off any COMO file
+      IF (HDX) GO TO 100
+      CALL DUPLX$(OR(MODE,HALF))            /* Set to HDX
+      CALL PASS$(PASS,LEN,HDX)
+      GO TO 500
+100   CALL DUPLX$(OR(MODE,HDXNLF))          /* Set to HDX & no LF
+      DO 200  I = 1,4
+      CALL TNOUA(OCHARS(1,I),LEN)
+C* G.M.Lack 10 Jan 90.  Can send parity.  Note original actually sent 0!
+C* 200  CALL TNOUA(:015,1)                    /* <CR> without parity
+ 200  CALL TNOUA(\(CR),1)                     /* <CR> without parity
+      CALL PASS$(PASS,LEN,HDX)
+      CALL TNOU('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',LEN)
+500   CALL DUPLX$(MODE)
+      IF (ISCOMO)                           /* If unit open
+     +CALL COMO$$(:000020,0,0,0,ICODE)      /* Turn on COMO file (if any)
+      CALL BREAK$(.FALSE.)
+      RETURN
+      END
+C:
+C:
+C:    INTEGER*2 FUNCTION PASS$
+C:    Terminal or command file input function with 32 character buffer
+C:    9th July 1979  Wodehouse. Suitable for R and V mode.
+C:    Updated 18th July 1979 Wodehouse to return length of
+C:    string input without trailing blanks when used as a
+C:    function.
+C:    Updated 3rd December to deal with password input in FDX or HDX.
+C:    This is a special version of COMIN.
+C:    Input ONLY from terminal Wodehouse 8th September 1981.
+C:    Above restriction removed again. Wodehouse 22nd October 1981.
+      INTEGER*2 FUNCTION PASS$(LINE,LEN,HDX)
+      INTEGER*2 LINE(1),ERASE,KILL,ICODE,BLANK,CR,GCHAR,BS$,CRNP,BS2,BS
+      LOGICAL HDX
+      PARAMETER BLANK=:240,CR=:212,BS$=:104244,CRNP=:015,BS2=:104210,
+     +BS=:210
+      ICODE=0
+C:    Set string length to zero first
+      PASS$=0
+      CALL ERKL$$(:000001,ERASE,KILL,ICODE)
+10    K=0
+20    CALL C1IN(IC)
+      IF (HDX.AND.IC.NE.CR.AND.IC.NE.BS) CALL TNOUA(BS$,2)
+      IF (IC.NE.KILL) GO TO 30
+      IF (HDX) CALL TNOUA(CRNP,1)       /* Send CR only after KILL
+      GO TO 10
+30    IF (IC.EQ.CR) GO TO 60
+      IF (IC.NE.ERASE) GO TO 40
+      IF (HDX.AND.ERASE.NE.BS) CALL TNOUA(BS2,2)  /* Send BS if ERASE not BS
+      IF (K.GT.0) K=K-1
+      GO TO 20
+40    IF (K.GE.LEN) GO TO 50
+C:    K updated automattically by SCHAR
+      CALL SCHAR(LOC(LINE),K,IC)
+      GO TO 20
+50    K=K+1
+      GO TO 20
+C:    Now find length of string
+60    IF (K.EQ.0) GO TO 90
+      J=K
+      IF (K.GT.LEN)J=LEN
+      DO 70 I=1,J
+      NC=J-I
+      IF (GCHAR(LOC(LINE),NC).NE.BLANK) GO TO 80
+70    CONTINUE
+C:    If only BLANKs found, length of string is zero
+      GO TO 90
+80    PASS$=NC
+C:    Now add any trailing BLANKs required
+90    IF (K.GE.LEN) GO TO 110
+      J=LEN-K
+      DO 100 I=1,J
+100   CALL SCHAR(LOC(LINE),K,BLANK)
+C:    Now put blank in last byte if LEN is odd.
+C:    Remember SCHAR starts at zero not one.
+C:    Also don't alter LEN.
+110   NC=LEN
+      IF (MOD(LEN,2).NE.0) CALL SCHAR(LOC(LINE),NC,BLANK)
+      RETURN
+      END
+C:
+C*
+C*********************************************************************
+C*
+      SUBROUTINE FILL$R(KEY,LINE,FSTPOS,LSTPOS)
+C*    Space/null/zero-fill buffer. Works on characters starting at position 1.
+      INTEGER*2 FINISH,FSTPOS,LINE(1),LSTPOS,SCHAR,START,KEY,CHAR
+      IF (FSTPOS.LE.0) RETURN
+      IF (FSTPOS.GT.LSTPOS) RETURN
+      CHAR=RS(KEY,8)       /* Make CHAR suitable for SCHAR
+C* Check if FSTPOS even or LSTPOS odd - fill them individually
+      START=FSTPOS-1     /* Subtract one for SCHAR if required
+      FINISH=LSTPOS-1
+C*    Remember SCHAR starts at zero and updates the pointer
+      IF(AND(START,:000001).NE.0)CALL SCHAR(LOC(LINE),START,CHAR)
+      IF(AND(FINISH,:000001).EQ.0)CALL SCHAR(LOC(LINE),FINISH,CHAR)
+      START=RS(FSTPOS,1)+1     /* Carefull where we start
+      FINISH=RS(LSTPOS,1)      /* & where we stop
+      IF (START.GT.FINISH) RETURN  /* Nothing more to do
+      LINE(START)=KEY
+      CALL IMOVE(LINE(START),LINE(START+1),FINISH-START)
+      RETURN
+      END

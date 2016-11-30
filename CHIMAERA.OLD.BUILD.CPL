@@ -1,0 +1,24 @@
+&args options:rest
+Close 1 2 3
+Binary CHIMAERA.bin
+Ftn CHIMAERA -64v %options%
+Ftn GGRSUB -dynm
+Pma GGRSUB -listing no
+Close 3
+&data SEG -load
+Mix
+Split
+Common abs 4000
+S/Load CHIMAERA 0 4000 4000
+D/Library
+Return
+Share
+CH
+Delete CHIMAERA
+Quit
+&end
+Restore CH4000
+Save CHIMAERA.save
+Delete CH4000
+Delete CHIMAERA.bin
+&return

@@ -1,0 +1,334 @@
+C G$KEYS.INS.FTN,  SYSCOM,  WODEHOUSE, M.L.ARNAUTOV,  07/01/83
+C Definitions and keys for GGRLIB.
+C Copyright (c) 1983, Glaxo Group Research, Greenford, Middx
+C
+      NOLIST
+C
+C Modifications
+C Date      Programmer   Description
+C 08-Nov-83 M.L.Arnautov Added G$CONT, G$LGID, G$SURN and G$DPT keys
+C                        for USRLS$.
+C 08-Aug-83 G.M.Lack     Added G$NQRY for YESNOQ.
+C 03-Aug-83 Wodehouse    Add CSUB$R as INTEGER*2 (left out in error).
+C 06-Jul-83 Wodehouse    Add G$TRPL for YESNOQ and change values of
+C                        G$DNO, G$DYES and G$QUIT.
+C 06-Jul-83 Wodehouse    Change G$NOQT for G$QUIT for YESNOQ.
+C 05-Jul-83 Wodehouse    Add G$NOQT key for YESNOQ.
+C 01-Jul-83 Wodehouse    Revamp header and add keys for CMATCH
+C                        and YESNOQ.
+C
+C     TABSET 6 10 24 67
+C
+      INTEGER*2
+     X   COMIN,        /* Terminal/com'-file input length
+     X   TNIN,         /* Terminal input length
+     X   PASSWD,       /* Password input length
+     X   LENGTH,       /* Length of text in buffer
+     X   LENBTS,       /* Length of bit-screen
+     X   NBTS,         /* Number of bits set
+     X   NBITS,        /* Number of bits set (Old name)
+     X   NXTBIT,       /* Next bit found set
+     X   NUFRD,        /* NUmber FRom Date
+     X   NINDW,        /* Number INto Day of Week
+     X   COMP$R,       /* String comparison
+     X   CSUB$R,       /* Sub-string  comparison
+     X   ICOMPN,       /* String comparison
+     X   TRNBTS,       /* Overflow indicator
+     X   TTYIN,        /* TTY input character
+     X   NLSP$R,       /* Number of leading spaces in string
+     X   JUSTFY,       /* Length of justified string
+     X   CMATCH,       /* Position of match/no-match
+     X   YESNOQ        /* Yes, no or quit
+C
+      INTEGER*4
+     X   NLBTS,        /* Number of bits set
+     X   NBITSL,       /* Number of bits set (long bits) (old name)
+     X   NXTBTL        /* Next bit found set
+C
+      LOGICAL
+     X   STRNG$,       /* String found and not truncated
+     X   CPARS$,       /* Command line parsed OK
+     X   COMIN$,       /* Got some input
+     X   TOKEN$,       /* Not end of buffer or token
+     X   TRUBIT,       /* Bit set
+     X   BITRUE,       /* Bit set (old name)
+     X   BTSLFT,       /* Check on bit lists
+     X   TRUBTL,       /* Bit set (long bit)
+     X   BTRUEL,       /* Bit set in long bit lists (old name)
+     X   TTYRDY,       /* TTY input ready
+     X   M$INIT        /* Argument check
+C
+      REAL*8
+     X   DAFRN         /* DAte FRom Number
+C
+C    The following are keys for GGRLIB
+C
+      INTEGER*2
+     X   G$KEY,  G$KEY0, G$KEY1, G$KEY2, G$KEY3, G$KEY4,
+     X   G$KEY5, G$KEY6, G$KEY7, G$KEY8, G$KEY9, G$LAST,
+     X   G$BLNK, G$NULL, G$ZERO,
+     X   G$UPPR, G$JUST, G$PRNT, G$NOEK, G$NPAD, G$TTY,
+     X   G$CANC, G$NDEF, G$BLCM, G$NESC, G$QUOT, G$PARS,
+     X   G$DFLT, G$REM,  G$UNDR, G$NEWL, G$PAD1, G$EXP,
+     X   G$A1,   G$IN,   G$OUT,  G$INOU, G$UNIT, G$CLOS,
+     X   G$RTRN, G$MUTE, G$COML, G$DELE, G$APND, G$LEAV,
+     X   G$RDWR, G$COMM, G$DKEY, G$FORC, G$MAND, G$MULT,
+     X   G$NONE, G$OPT,  G$SYN,  G$END,  G$INTS,
+     X   G$INTL, G$OCTS, G$OCTL, G$SNGL, G$DBL,  G$UPTO,
+     X   G$IN2,  G$IN4,  G$RL4,  G$RL8,  G$READ, G$WRIT,
+     X   G$EXST, G$ATCH, G$SETH, G$GETU, G$AOPT, G$NEW,
+     X   G$OLD,  G$NDAM, G$NSGS, G$REL,  G$ABS,  G$NQRY,
+     X   G$STOP, G$CLEA, G$SKIP, G$RANG, G$LINE, G$PRMP,
+     X   G$REPL, G$FLD,  G$STOR, G$DISP, G$COND, G$OVER,
+     X   G$RDRL, G$RDRS, G$UNST, G$LEAD,
+     X   G$6804, G$V100,
+     X   G$SCLE, G$CEOS, G$CEOL, G$LINS, G$LDEL, G$BSTP,
+     X   G$CURR,
+     X   G$PRES, G$ABSN,
+     X   G$DNO,  G$DYES, G$QUIT, G$TRPL,
+     X   G$LGID, G$DPT,  G$SURN, G$CONT
+C
+      PARAMETER
+     X
+     X /********************* FILL$R *************************/
+     X /*                                                    */
+     X    G$BLNK=:120240,  /* Two ASCII spaces               */
+     X    G$NULL=:100200,  /* Two ASCII nulls                */
+     X    G$ZERO=:000000,  /* Two ASCII nulls with no parity */
+     X                     /* (same as zero).                */
+     X /*                                                    */
+     X /******************** COMIN$ **************************/
+     X /*                                                    */
+     X    G$DFLT=:000000,  /* Default key                    */
+     X    G$UPPR=:000001,  /* Force upper case               */
+     X    G$JUST=:000002,  /* Ignore leading spaces          */
+     X    G$PARS=:000004,  /* Parse entry already in buffer  */
+     X    G$NOEK=:000010,  /* No erase/kill processing       */
+     X    G$NESC=:000020,  /* Switch off logical escape      */
+     X    G$PAD1=:000040,  /* Pad  to nearest word boundary  */
+     X    G$CANC=:000100,  /* Echo 'Cancelled' on kill       */
+     X    G$NDEF=:000200,  /* Do not accept null lines       */
+     X    G$BLCM=:000400,  /* Replace commas with blanks     */
+     X    G$NPAD=:001000,  /* Do not pad with blanks         */
+     X    G$QUOT=:002000,  /* Switch on quote processing     */
+     X    G$PRNT=:004000,  /* Ignore non-printing characters */
+     X    G$TTY =:010000,  /* Force terminal input           */
+     X /*                                                    */
+     X /******************** TOKEN$ **************************/
+     X /*                                                    */
+     X /* G$DFLT=:000000,  /* Default key                    */
+     X /* G$UPPR=:000001,  /* Force upper case               */
+     X /* G$BLCM=:000400,  /* Treat commas as blanks         */
+     X /* G$NPAD=:001000,  /* Do not pad with blanks         */
+     X /* G$QUOT=:002000,  /* Switch on quote processing     */
+     X    G$REM =:004000,  /* Deliver rest of buffer         */
+     X /* G$PAD1=:010000,  /* Pad to nearest word boundary   */
+     X /*                                                    */
+     X /*******************  TTYO  ***************************/
+     X /*                                                    */
+     X /* G$DFLT=:000000,  /* Default key                    */
+     X /* G$NPAD=:001000,  /* Omit trailing blanks           */
+     X    G$UNDR=:002000,  /* Underline                      */
+     X /* G$PRNT=:004000,  /* Print non-printing chars as ~  */
+     X    G$NEWL=:010000,  /* Finish with a line feed        */
+     X    G$EXP =:020000,  /* Bottom bytes only              */
+     X    G$A1  =:040000,  /* Top bytes only                 */
+     X    G$UPTO=:100000,  /* Repeat up to character count   */
+     X /*                                                    */
+     X /******************  FILIO  ***************************/
+     X /*                                                    */
+     X    G$IN  =:000001,  /* Open an input file             */
+     X    G$OUT =:000002,  /* Open an output file            */
+     X    G$INOU=:000003,  /* Open an input and output files */
+     X    G$CLOS=:000004,  /* Close specified file units     */
+     X    G$UNIT=:000010,  /* Return file units as units     */
+     X    G$RTRN=:000020,  /* On error do not crash out      */
+     X    G$COML=:000100,  /* Search command line only       */
+     X    G$MUTE=:000200,  /* Suppress error messages        */
+     X    G$RDWR=:000400,  /* All files in read/write mode   */
+     X    G$DELE=:001000,  /* If output exists, leave it     */
+     X    G$APND=:002000,  /* If output exists, append to it */
+     X    G$LEAV=:004000,  /* If output exists, delete it    */
+     X /* G$TTY =:010000,  /* Query user only                */
+     X    G$COMM=:020000,  /* Grab name from common buffer   */
+     X /*                                                    */
+     X /******************** CPARS$ **************************/
+     X /*                                                    */
+     X /* G$DFLT=:000000,  /* Default option                 */
+     X    G$OPT =:000000,  /* Optional option                */
+     X    G$DKEY=:000001,  /* Default keyword                */
+     X    G$FORC=:000002,  /* Coerce keywords into options   */
+     X    G$MAND=:000004,  /* Must have an option            */
+     X    G$MULT=:000010,  /* Multiple options permitted     */
+     X    G$NONE=:000020,  /* Must not have an option        */
+     X    G$SYN =:000040,  /* Synonymous keyword             */
+     X /* G$REM =:004000,  /* Option is remainder of comline */
+     X    G$END =:040000,  /* End of keyword list            */
+     X /*                                                    */
+     X /******************** TREE$$ **************************/
+     X /*                                                    */
+     X    G$READ=:000001,  /* Open for reading               */
+     X    G$WRIT=:000002,  /* Open for writing               */
+     X    G$EXST=:000004,  /* Check existence                */
+     X    G$AOPT=:000010,  /* Make attach optional           */
+     X    G$ATCH=:000020,  /* Attach to last UFD in treename */
+     X    G$SETH=:000040,  /* Set home when attached         */
+     X    G$GETU=:000100,  /* Get file unit                  */
+     X /* G$RDWR=:000400,  /* Open for reading and writing   */
+     X /* G$DELE=:001000,  /* Delete file                    */
+     X    G$NDAM=:002000,  /* Make it DAM, if creating       */
+     X    G$NSGS=:004000,  /* If creating, make it a SEG     */
+     X    G$NEW =:010000,  /* File must not exist            */
+     X    G$OLD =:020000,  /* File must exist                */
+     X /*                                                    */
+     X /******************** FTOVFI **************************/
+     X /*                                                    */
+     X    G$INTS=:000001,  /* Short decimal                  */
+     X    G$INTL=:000002,  /* Long decimal                   */
+     X    G$OCTS=:000004,  /* Short octal                    */
+     X    G$OCTL=:000010,  /* Long octal                     */
+     X /*                                                    */
+     X /******************** FTINIT **************************/
+     X /*                                                    */
+     X /* G$TTY =:010000,  /* Terminal output required       */
+     X /*                                                    */
+     X /******************** FTOVFR **************************/
+     X /*                                                    */
+     X    G$SNGL=:000001,  /* Single precision real          */
+     X    G$DBL =:000002,  /* Double precision real          */
+     X /*                                                    */
+     X /********************  FTAB  **************************/
+     X /*                                                    */
+     X    G$REL =:000001,  /* Relative tabbing               */
+     X    G$ABS =:000002,  /* Absolute tabbing               */
+     X /*                                                    */
+     X /******************** PSORTM **************************/
+     X /*                                                    */
+     X    G$IN2 =:177777,  /* INTEGER*2 field                */
+     X    G$IN4 =:177776,  /* INTEGER*4 field                */
+     X    G$RL4 =:177775,  /* REAL*4 field                   */
+     X    G$RL8 =:177774,  /* REAL*8 field                   */
+     X /*                                                    */
+     X /******************** USER$$ **************************/
+     X /*                                                    */
+     X    G$CURR=:177777,  /* Return info for current user   */
+     X /*                                                    */
+     X /*                                                    */
+     X /******************** CMATCH **************************/
+     X /*                                                    */
+     X    G$PRES=:000000,  /* Find 1st char in string        */
+     X    G$ABSN=:000001,  /* Find 1st char NOT in string    */
+     X /*                                                    */
+     X /******************** YESNOQ **************************/
+     X /*                                                    */
+     X /* G$SNGL=:000001,  /* Prompt once only               */
+     X /* G$DBL =:000002,  /* Prompt twice only              */
+     X    G$TRPL=:000003,  /* Prompt three times only        */
+     X    G$NQRY=:000100,  /* Do not append ?                */
+     X /* G$NDEF=:000200,  /* No default answer              */
+     X    G$DNO =:040000,  /* Default answer is no           */
+     X    G$DYES=:020000,  /* Default answer is yes          */
+     X    G$QUIT=:100000,  /* Quit allowed                   */
+     X /*                                                    */
+     X /******************************************************/
+     X /******************** SCRIPT **************************/
+     X /******************************************************/
+     X /******************** ADDR$S **************************/
+     X /*                                                    */
+     X    G$PRMP=:000100,  /* Prompt field                   */
+     X    G$REPL=:004000,  /* Reply field                    */
+     X /*                                                    */
+     X /******************** DRAW$S **************************/
+     X /*                                                    */
+     X /* G$FORC=:000002,  /* Force complete redraw          */
+     X    G$LINE=:000004,  /* Draw lines (default)           */
+     X    G$RANG=:000010,  /* Draw range of items            */
+     X /* G$PRMP=:000100,  /* Draw prompts too               */
+     X    G$FLD =:000200,  /* Draw fields                    */
+     X    G$COND=:000400,  /* Do not bother if refresh       */
+     X    G$OVER=:001000,  /* Display reply buffers          */
+     X    G$CLEA=:004000,  /* Clear reply buffers            */
+     X    G$UNST=:020000,  /* Overwrite field stop           */
+     X    G$STOP=:040000,  /* Display field stop             */
+     X /*                                                    */
+     X /******************** INIT$S **************************/
+     X /*                                                    */
+     X /* G$DFLT=:000000,  /* No special action              */
+     X /* G$MUTE=:000200,  /* Don't draw screen              */
+     X /* G$CLEA=:004000,  /* Clear reply buffers            */
+     X /* G$END =:040000,  /* Prepare to exit                */
+     X /*                                                    */
+     X    G$6804=:000001,  /* Pericom 6804                   */
+     X    G$V100=:000002,  /* VT100                          */
+     X /*                                                    */
+     X /* G$PRMP=:000100,  /* Prompt field                   */
+     X /* G$REPL=:004000,  /* Reply field                    */
+     X    G$SKIP=:177777,  /* Skip this field                */
+     X /*                                                    */
+     X /******************** INPT$S **************************/
+     X /*                                                    */
+     X /* G$UPPR=:000001,  /* Force upper case               */
+     X /* G$JUST=:000002,  /* Left justify                   */
+     X /* G$NOEK=:000010,  /* Disable erase/kill             */
+     X /* G$OVER=:001000,  /* Overlay                        */
+     X /* G$QUOT=:002000,  /* Enable quote processing        */
+     X /* G$CLEA=:004000,  /* Clear reply buffer             */
+     X /* G$TTY =:010000,  /* TTY input only                 */
+     X /* G$STOP=:040000,  /* Display field stop             */
+     X /*                                                    */
+     X    G$RDRL=:010000,  /* Re-draw line                   */
+     X    G$RDRS=:020000,  /* Re-draw screen                 */
+     X /*                                                    */
+     X /******************** QUER$S **************************/
+     X /*                                                    */
+     X /* G$UPPR=:000001,  /* Force upper case               */
+     X /* G$JUST=:000002,  /* Left justify                   */
+     X /* G$NOEK=:000010,  /* No erase/kill                  */
+     X /* G$NPAD=:001000,  /* No padding                     */
+     X /* G$QUOT=:002000,  /* Quote processing on            */
+     X /* G$TTY =:010000,  /* TTY input only                 */
+     X    G$LEAD=:020000,  /* Display leader                 */
+     X /* G$STOP=:040000,  /* Display field stop             */
+     X /*                                                    */
+     X /* G$RDRL=:010000,  /* Re-draw line                   */
+     X /* G$RDRS=:020000,  /* Re-draw screen                 */
+     X /*                                                    */
+     X /******************** RMRK$S **************************/
+     X /*                                                    */
+     X    G$STOR=:000001,  /* Store remark                   */
+     X    G$DISP=:000002,  /* Display remark                 */
+     X /*                                                    */
+     X /******************** SCRN$S **************************/
+     X /*                                                    */
+     X    G$SCLE=:000001,  /* Clear screen                   */
+     X    G$CEOS=:000002,  /* Clear to end of screen         */
+     X    G$CEOL=:000003,  /* Clear to end of line           */
+     X    G$LINS=:000004,  /* Insert line                    */
+     X    G$LDEL=:000005,  /* Delete line                    */
+     X    G$BSTP=:000006,  /* Output back stop               */
+     X /*                                                    */
+     X /******************** USRLS$ **************************/
+     X /*                                                    */
+     X    G$CONT=:000000,  /* Continue last call             */
+     X    G$LGID=:000001,  /* Search lognam index            */
+     X    G$DPT =:000002,  /* Search departmental index      */
+     X    G$SURN=:000004,  /* Search surname index           */
+     X /*                                                    */
+     X /******************************************************/
+     X /*                                                    */
+     X    G$LAST=:000000   /* Must be last                   */
+     X /*                                                    */
+     X /******************************************************/
+C
+C     Two SCRIPT library functions
+C
+      INTEGER*2 INPT$S,QUER$S
+C
+C     The variables below have been left out of KEYS.F
+C
+      INTEGER*2 GCHAR,DUPLX$
+C
+      LOGICAL NAMEQ$,COMEQ$,NAMEQV,COMEQV,TEXTO$,MISSIN
+C
+      LIST
+

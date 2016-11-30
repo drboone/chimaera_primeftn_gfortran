@@ -47,7 +47,7 @@
 
 #use re 'debugcolor';
 
-	$block =~ s/(^\s+(SUBROUTINE|FUNCTION).*\n)((#include.*\n|C.*\n)+)(\s+IMPLICIT.*\n)/$1\n$5\n$3/mg;
+	$block =~ s/(^\s+(SUBROUTINE|\w FUNCTION).*\n)((.....\+.*\n)*)((#include.*\n|C.*\n)+)(\s+IMPLICIT.*\n)/$1\n$5\n$3/mg;
 
 # Write output
 

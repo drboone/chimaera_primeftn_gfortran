@@ -68,9 +68,8 @@ C*    *****************************************************************
 C*
       SUBROUTINE MAIN
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 C*
+
 C*
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
@@ -3618,13 +3617,12 @@ C***********************************************************************
 C*
       SUBROUTINE DEAD(FLAGS,LUCK)
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
+
 C*    The player has been killed, offer him reincarnation.
 C*
       INTEGER*4 DELAY   !  Delay for SLEEP$
@@ -3701,10 +3699,9 @@ C***********************************************************************
 C*
       SUBROUTINE INVENT(HELD,OBJLOC)        !  Objects carried
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "CHIMAERA.INS.f"
 C*
+
 C*
       INTEGER*2 THINGS(20,H$OBJ),OBJLOC(1)
 C*
@@ -3812,13 +3809,12 @@ C***********************************************************************
 C*
       SUBROUTINE LEXICN      !  Main dictionary for calculated text.
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
+
 C*
       REAL*8    DICACT(H$ACT),         !  Action verbs
      +          PSEUDO(H$PSEU)              ! Pseudo objects
@@ -3995,13 +3991,12 @@ C***********************************************************************
 C*
       SUBROUTINE LOCWUN(OBJLOC)
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "CHIMAERA.INS.f"
 C*    Put each object into a unique initial positions, different
 C*    in each game. N.B. Only objects 11 - H$OBJ cannot be seen at
 C*    ground level until they have been placed by the player.
 C*
+
 C*
       INTEGER*2 OBJLOC(1)
 C*
@@ -4080,13 +4075,12 @@ C***********************************************************************
 C*
       SUBROUTINE PARSE       !  Input parsing routine
 
-      IMPLICIT INTEGER*2(A-Z)
-
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
+
 C*
       INTEGER*2 LINE(66),    !  Input buffer
      +          LEN,         !  LINE length
@@ -4196,10 +4190,9 @@ C********************************************************************
 C*
       SUBROUTINE PLUMB(HERE,X,Y,Z,OBJLOC)
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "CHIMAERA.INS.f"
 C*    Try to find the bottom of a shaft
+
       INTEGER*2 OBJLOC(1)
 C*
       ZNEXT=Z
@@ -4225,11 +4218,10 @@ C*******************************************************************
 C*
       SUBROUTINE POINTR(SEED,IPT,SIZE)
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 C*    This routine produces a random series of unique pointers from
 C*    1 to SIZE in IPT using the SEED provided.
 C*
+
       INTEGER*2 IPT(SIZE)
 C*     Preload array
       DO 10 I=1,SIZE
@@ -4253,13 +4245,12 @@ C***********************************************************************
 C*
       SUBROUTINE QUIT(LIFE,UNDEAD)          !  Terminates program
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
+
 C*
       INTEGER*2 SCORE,MOVENO
       INTEGER*2 IWORD(10,10),
@@ -4324,7 +4315,7 @@ C*
 C***********************************************************************
 C*
       SUBROUTINE RESTOR(MOVENO,SCORE,X,Y,Z,VALUES,FLAGS,OBJLOC,
-     +MONSTR)
+
 C*    Subroutine to restore a game of CHIMAERA.
 C*
 #include "KEYS.INS.f"
@@ -4332,7 +4323,8 @@ C*
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
-      IMPLICIT INTEGER*2 (A-Z)
+
+     +MONSTR)
 C*
       LOGICAL   YES
 C*
@@ -4385,8 +4377,6 @@ C***********************************************************************
 C*
       SUBROUTINE SAVE(VALUES,FLAGS,OBJLOC,MONSTR)
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 C*    Subroutine to save a game of CHIMAERA.
 C*
 #include "KEYS.INS.f"
@@ -4394,6 +4384,7 @@ C*
 #include "G_KEYS.INS.f"
 #include "CHIMAERA.INS.f"
 C*
+
 C*
       INTEGER*2 DATE(5),          ! TIMDAT buffer
      +          VALUES(H$VAL),
@@ -4428,9 +4419,8 @@ C***********************************************************************
 C*
       SUBROUTINE SCORIT(SCORAL)   !  Current score.
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "CHIMAERA.INS.f"
+
 C*
       INTEGER*2 SCORE,MOVENO
       INTEGER*2 POINTS(H$OBJ)     ! Object scores
@@ -4500,12 +4490,11 @@ C***********************************************************************
 C*
       SUBROUTINE YESNO(YES)  !  YES or NO response
 
-      IMPLICIT INTEGER*2 (A-Z)
-
 #include "KEYS.INS.f"
 #include "ERRD.INS.f"
 #include "G_KEYS.INS.f"
 C*
+
       LOGICAL YES,COMEQV
       REAL*8 REPLY
       YES=.FALSE.
